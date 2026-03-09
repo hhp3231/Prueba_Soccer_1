@@ -1,0 +1,64 @@
+{
+  "roundOf32": [
+    "Escocia",
+    "Turquía/Rumania/Eslovaquia/Kosovo",
+    "Inglaterra",
+    "Jordania",
+    "Irak/Bolivia/Surinam",
+    "Haití",
+    "Croacia",
+    "Países Bajos",
+    "Australia",
+    "Austria",
+    "Estados Unidos",
+    "Catar",
+    "Argentina",
+    "Uruguay",
+    "Suiza",
+    "República de Corea",
+    "Jamaica/RD de Congo/Nueva Caledonia",
+    "España",
+    "Dinamarca/Macedonia/República Checa/Irlanda",
+    "Noruega",
+    "Argelia",
+    "Ecuador",
+    "Brasil",
+    "Irán",
+    "Uzbekistán",
+    "Francia",
+    "Marruecos",
+    "México",
+    "Colombia",
+    "Portugal",
+    "Japón",
+    "Senegal"
+  ],
+  "roundOf16": [
+    "Turquía/Rumania/Eslovaquia/Kosovo",
+    "Suiza",
+    "Colombia",
+    "Argentina",
+    "México",
+    "Estados Unidos",
+    "Países Bajos",
+    "Austria"
+  ],
+  "quarterfinals": [
+    "Turquía/Rumania/Eslovaquia/Kosovo",
+    "Colombia",
+    "México",
+    "Países Bajos"
+  ],
+  "semifinals": [
+    "Colombia",
+    "Austria"
+  ],
+  "thirdPlace": [
+    "Estados Unidos",
+    "Suiza"
+  ],
+  "final": [
+    "Colombia",
+    "Austria"
+  ]
+}
