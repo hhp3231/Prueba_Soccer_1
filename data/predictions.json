@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Juan",
+    "predictions": [
+      {
+        "matchId": 1,
+        "home": 1,
+        "away": 0
+      }
+    ],
+    "bonus": [
+      "Brasil",
+      "Argentina"
+    ]
+  },
+  {
+    "name": "Maria",
+    "predictions": [
+      {
+        "matchId": 1,
+        "home": 0,
+        "away": 2
+      }
+    ],
+    "bonus": [
+      "Francia",
+      "Brasil"
+    ]
+  }
+]

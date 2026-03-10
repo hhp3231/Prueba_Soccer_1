@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Polla Mundialista 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<header class="hero">
+<div class="hero__inner">
+<h1>Polla Mundialista <span>2026</span></h1>
+<p class="subtitle">Ranking en tiempo real · Predicciones · Eliminatorias</p>
+
+<div class="finder">
+<select id="sel"></select>
+<input id="search" placeholder="Buscar participante...">
+</div>
+
+<div class="summary">
+<div class="card"><div>Participante</div><strong id="s_name">—</strong></div>
+<div class="card"><div>Puntos partidos</div><strong id="s_match">0</strong></div>
+<div class="card"><div>Bonus</div><strong id="s_bonus">0</strong></div>
+<div class="card"><div>Total</div><strong id="s_total">0</strong></div>
+</div>
+</div>
+</header>
+
+<main class="container">
+
+<nav class="tabs">
+<button class="tab active" data-tab="grupos">Grupos</button>
+<button class="tab" data-tab="dieciseisavos">Dieciseisavos</button>
+<button class="tab" data-tab="octavos">Octavos</button>
+<button class="tab" data-tab="cuartos">Cuartos</button>
+<button class="tab" data-tab="semifinal">Semifinal</button>
+<button class="tab" data-tab="tercero">3ro y 4to</button>
+<button class="tab" data-tab="final">Final</button>
+<button class="tab" data-tab="ranking">Posiciones</button>
+<button class="tab" data-tab="mundial">Así va el mundial</button>
+<button class="tab" data-tab="puntos">Puntos</button>
+</nav>
+
+<section id="grupos" class="tabcontent active"><div class="matches" id="matches-grupos"></div></section>
+<section id="dieciseisavos" class="tabcontent"><div class="matches" id="matches-dieciseisavos"></div></section>
+<section id="octavos" class="tabcontent"><div class="matches" id="matches-octavos"></div></section>
+<section id="cuartos" class="tabcontent"><div class="matches" id="matches-cuartos"></div></section>
+<section id="semifinal" class="tabcontent"><div class="matches" id="matches-semifinal"></div></section>
+<section id="tercero" class="tabcontent"><div class="matches" id="matches-tercero"></div></section>
+<section id="final" class="tabcontent"><div class="matches" id="matches-final"></div></section>
+
+<section id="ranking" class="tabcontent">
+<h2>Tabla de posiciones</h2>
+<table id="rankingTable">
+<thead>
+<tr><th>#</th><th>Participante</th><th>Partidos</th><th>Bonus</th><th>Total</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+</section>
+
+<section id="mundial" class="tabcontent">
+<h2>Así va el Mundial</h2>
+<div id="groups"></div>
+</section>
+
+<section id="puntos" class="tabcontent">
+<h2>Sistema de puntuación</h2>
+<ul>
+<li>5 pts marcador exacto</li>
+<li>3 pts ganador + goles</li>
+<li>2 pts resultado correcto</li>
+<li>1 pt goles de un equipo</li>
+<li>0 pts fallo total</li>
+</ul>
+</section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

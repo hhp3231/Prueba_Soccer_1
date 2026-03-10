@@ -1,0 +1,50 @@
+[
+  {
+    "matchId": 1,
+    "home": "Mexico",
+    "away": "Sudafrica",
+    "stage": "grupos"
+  },
+  {
+    "matchId": 2,
+    "home": "USA",
+    "away": "Espa\u00f1a",
+    "stage": "grupos"
+  },
+  {
+    "matchId": 49,
+    "home": "A1",
+    "away": "B2",
+    "stage": "dieciseisavos"
+  },
+  {
+    "matchId": 57,
+    "home": "W49",
+    "away": "W50",
+    "stage": "octavos"
+  },
+  {
+    "matchId": 61,
+    "home": "W57",
+    "away": "W58",
+    "stage": "cuartos"
+  },
+  {
+    "matchId": 63,
+    "home": "W61",
+    "away": "W62",
+    "stage": "semifinal"
+  },
+  {
+    "matchId": 64,
+    "home": "Perdedor SF1",
+    "away": "Perdedor SF2",
+    "stage": "tercero"
+  },
+  {
+    "matchId": 65,
+    "home": "Ganador SF1",
+    "away": "Ganador SF2",
+    "stage": "final"
+  }
+]
