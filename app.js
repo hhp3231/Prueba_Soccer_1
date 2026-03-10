@@ -7,7 +7,7 @@ const DATA = {
   bonusActual: 'data/bonus_actual.json'
 };
 
-const VERSION = '20260309-fases';
+const VERSION = '20260305-UX';
 function bust(url){
   const sep = url.includes('?') ? '&' : '?';
   return `${url}${sep}v=${VERSION}&t=${Date.now()}`; // fuerza no usar caché
@@ -18,6 +18,16 @@ let STATE = {
   participants: [],
   resultsById: new Map(),
   bonus: { picks: [], actual: {} }
+};
+
+const GROUP_STAGE_MATCHES = 48;
+const GROUP_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const KNOCKOUT_BASE = {
+  final: 1,
+  thirdPlace: 1,
+  semifinals: 2,
+  quarterfinals: 4,
+  roundOf16: 8
 };
 
 async function safeJson(url){
@@ -42,15 +52,10 @@ async function loadAll(){
   STATE.bonus.actual = ba||{};
 }
 
-// ===== Utilidades de partido/score =====
 function outcome(h,a){ if(h>a) return 'H'; if(h<a) return 'A'; return 'D'; }
 
 function pointsPerMatch(pred, actual){
-  if(!actual) return {pts:0, label:'Sin resultado'};
-  const ph = pred?.homeGoalsPred, pa = pred?.awayGoalsPred;
-  const ah = actual.homeGoals, aa = actual.awayGoals;
-  if(ph==null || pa==null) return {pts:0, label:'Sin predicción'};
-  if(ph===ah && pa===aa) return {pts:5, label:'Marcador exacto (5)'};
+@@ -53,120 +63,240 @@ function pointsPerMatch(pred, actual){
   const po = outcome(ph,pa), ao = outcome(ah,aa);
   const threeByWinnerGoals = (ao!=='D' && po===ao && ((ao==='H' && ph===ah) || (ao==='A' && pa===aa)) && (ph!==ah || pa!==aa));
   const threeByDrawDiff = (ao==='D' && po==='D' && (ph!==ah));
@@ -60,7 +65,6 @@ function pointsPerMatch(pred, actual){
   return {pts:0, label:'No acierta (0)'};
 }
 
-// ===== Bonus por clasificados =====
 const BONUS_WEIGHTS = { roundOf32: 2, roundOf16: 5, quarterfinals: 10, semifinals: 15, thirdPlace: 17, final: 20 };
 
 function pointsBonusForParticipant(email){
@@ -69,15 +73,14 @@ function pointsBonusForParticipant(email){
   let total = 0; let breakdown = [];
   for(const k of Object.keys(BONUS_WEIGHTS)){
     const weight = BONUS_WEIGHTS[k];
-    const wanted = new Set((picks[k]||[]).map(x=>String(x).trim().toLowerCase()));
-    const real = new Set((actual[k]||[]).map(x=>String(x).trim().toLowerCase()));
+    const wanted = new Set((picks[k]||[]).map(x=>x.trim().toLowerCase()));
+    const real = new Set((actual[k]||[]).map(x=>x.trim().toLowerCase()));
     let hit=0; for(const t of wanted) if(real.has(t)) hit++;
     const pts = hit*weight; total+=pts; breakdown.push({stage:k, hits:hit, pts});
   }
   return {total, breakdown};
 }
 
-// ===== Render de participante (Partidos - todos) =====
 function renderParticipantByEmail(email){
   const p = STATE.participants.find(x=>x.email===email);
   if(!p){
@@ -90,6 +93,29 @@ function renderParticipantByEmail(email){
     return;
   }
   renderParticipant(p.name);
+function getPhaseRanges(){
+  const total = STATE.matches.length;
+  const groupCount = Math.min(GROUP_STAGE_MATCHES, total);
+  const knockout = Math.max(0, total - groupCount);
+  const consumed = Object.values(KNOCKOUT_BASE).reduce((a,b)=>a+b,0);
+  const roundOf32 = Math.max(0, knockout - consumed);
+
+  let cursor = groupCount + 1;
+  const ranges = {
+    all: [1, total],
+    roundOf32: [cursor, cursor + roundOf32 - 1],
+  };
+  cursor += roundOf32;
+  ranges.roundOf16 = [cursor, cursor + KNOCKOUT_BASE.roundOf16 - 1];
+  cursor += KNOCKOUT_BASE.roundOf16;
+  ranges.quarterfinals = [cursor, cursor + KNOCKOUT_BASE.quarterfinals - 1];
+  cursor += KNOCKOUT_BASE.quarterfinals;
+  ranges.semifinals = [cursor, cursor + KNOCKOUT_BASE.semifinals - 1];
+  cursor += KNOCKOUT_BASE.semifinals;
+  ranges.thirdPlace = [cursor, cursor + KNOCKOUT_BASE.thirdPlace - 1];
+  cursor += KNOCKOUT_BASE.thirdPlace;
+  ranges.final = [cursor, cursor + KNOCKOUT_BASE.final - 1];
+  return ranges;
 }
 
 function renderParticipant(nameOrEmail){
@@ -100,9 +126,24 @@ function renderParticipant(nameOrEmail){
   let matchPts = 0;
   for(const m of STATE.matches){
     const pred = p?.predictions?.find(pp=>pp.matchId===m.matchId) || {};
+function matchesForPhase(phase){
+  const [start, end] = getPhaseRanges()[phase] || [1, 0];
+  if(start > end) return [];
+  return STATE.matches.filter(m=>m.matchId >= start && m.matchId <= end);
+}
+
+function renderMatchesList(containerId, participant, phase='all'){
+  const el = document.getElementById(containerId);
+  if(!el) return 0;
+  const phaseMatches = phase === 'all' ? STATE.matches : matchesForPhase(phase);
+  el.innerHTML = '';
+  let points = 0;
+  for(const m of phaseMatches){
+    const pred = participant?.predictions?.find(pp=>pp.matchId===m.matchId) || {};
     const actual = STATE.resultsById.get(m.matchId);
     const sc = pointsPerMatch(pred, actual);
     matchPts += sc.pts;
+    points += sc.pts;
 
     const div = document.createElement('div');
     div.className='match';
@@ -120,102 +161,49 @@ function renderParticipant(nameOrEmail){
       </div>`;
     div.title = sc.label;
     matchesEl.appendChild(div);
+    el.appendChild(div);
   }
+  if(!phaseMatches.length){
+    el.innerHTML = '<p class="muted">No hay partidos cargados para esta fase.</p>';
+  }
+  return points;
+}
+
+function renderParticipantByEmail(email){
+  const p = STATE.participants.find(x=>x.email===email);
+  if(!p){
+    // limpiar vista
+    ['matches','matches-round32','matches-round16','matches-quarterfinals','matches-semifinals','matches-third-place','matches-final'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.innerHTML='';
+    });
+    document.getElementById('s_name').textContent = '—';
+    document.getElementById('s_match_pts').textContent = 0;
+    document.getElementById('s_bonus').textContent = 0;
+    document.getElementById('s_total').textContent = 0;
+    return;
+  }
+  renderParticipant(p.name);
+}
+
+function renderParticipant(nameOrEmail){
+  const q = (nameOrEmail||'').trim().toLowerCase();
+  const p = STATE.participants.find(x=>x.name.toLowerCase().includes(q) || x.email.toLowerCase().includes(q));
+  const matchPts = renderMatchesList('matches', p, 'all');
+  renderMatchesList('matches-round32', p, 'roundOf32');
+  renderMatchesList('matches-round16', p, 'roundOf16');
+  renderMatchesList('matches-quarterfinals', p, 'quarterfinals');
+  renderMatchesList('matches-semifinals', p, 'semifinals');
+  renderMatchesList('matches-third-place', p, 'thirdPlace');
+  renderMatchesList('matches-final', p, 'final');
   const bonus = p ? pointsBonusForParticipant(p.email) : {total:0};
   const total = matchPts + (bonus.total||0);
   document.getElementById('s_name').textContent = p ? `${p.name}` : '—';
   document.getElementById('s_match_pts').textContent = matchPts;
   document.getElementById('s_bonus').textContent = bonus.total||0;
   document.getElementById('s_total').textContent = total;
-
-  // Si hay una pestaña de fase activa, refrescarla también
-  renderActivePhaseIfAny();
 }
 
-// ===== Pestañas de fases =====
-const STAGE_LABELS = {
-  roundOf32: 'Dieciseisavos',
-  roundOf16: 'Octavos',
-  quarterfinals: 'Cuartos',
-  semifinals: 'Semifinal',
-  thirdPlace: '3.º y 4.º',
-  final: 'Final',
-};
-const STAGE_ORDER = ['roundOf32','roundOf16','quarterfinals','semifinals','thirdPlace','final'];
-
-function getStageKey(m){
-  const raw = m?.stage ?? m?.round ?? m?.phase ?? m?.fase ?? m?.etapa ?? m?.meta?.stage;
-  if(!raw) return undefined;
-  const norm = String(raw).toLowerCase().trim();
-  if (['roundof32','r32','dieciseisavos','32'].includes(norm)) return 'roundOf32';
-  if (['roundof16','r16','octavos','16'].includes(norm)) return 'roundOf16';
-  if (['quarterfinals','qf','cuartos','8'].includes(norm)) return 'quarterfinals';
-  if (['semifinals','sf','semifinal','4'].includes(norm)) return 'semifinals';
-  if (['thirdplace','3rd','tercerpuesto','3ro y 4to','3.º y 4.º','3.° y 4.°','3-4'].includes(norm)) return 'thirdPlace';
-  if (['final','finale'].includes(norm)) return 'final';
-  if (STAGE_LABELS[raw]) return raw; // ya está canonical
-  return undefined;
-}
-
-function renderPhase(key){
-  const container = document.getElementById(`matches-${key}`);
-  if(!container) return;
-  container.innerHTML = '';
-  // participante actual (por select o por nombre en summary)
-  const sel = document.getElementById('sel');
-  const p = sel?.value
-    ? STATE.participants.find(x=>x.email===sel.value)
-    : (() => {
-        const name = (document.getElementById('s_name')?.textContent||'').trim();
-        if(!name || name==='—') return null;
-        return STATE.participants.find(x=>x.name===name) || null;
-      })();
-
-  if(!p) return; // consistente con "Partidos": nada si no hay participante
-
-  const phaseMatches = STATE.matches.filter(m => getStageKey(m) === key);
-  if(!phaseMatches.length){
-    const info = document.createElement('div');
-    info.className = 'muted';
-    info.style.margin = '8px 0';
-    info.textContent = 'No hay partidos de esta etapa en los datos.';
-    container.appendChild(info);
-    return;
-  }
-
-  for(const m of phaseMatches){
-    const pred = p?.predictions?.find(pp=>pp.matchId===m.matchId) || {};
-    const actual = STATE.resultsById.get(m.matchId);
-    const sc = pointsPerMatch(pred, actual);
-
-    const div = document.createElement('div');
-    div.className='match';
-    div.innerHTML = `
-      <div class="match__id">#${m.matchId}</div>
-      <div>
-        <div class="team"><span class="team__name">${m.homeTeam}</span>
-          <span class="badge">Pred: ${pred.homeGoalsPred??'—'} - ${pred.awayGoalsPred??'—'}</span>
-        </div>
-        <div class="team"><span class="team__name">${m.awayTeam}</span></div>
-      </div>
-      <div class="score">
-        <div class="badge ${actual? 'badge--ok':'badge--warn'}">Final: ${actual? `${actual.homeGoals} - ${actual.awayGoals}` : '—'}</div>
-        <div class="pts">+${sc.pts}</div>
-      </div>`;
-    div.title = sc.label;
-    container.appendChild(div);
-  }
-}
-
-function renderActivePhaseIfAny(){
-  const activePanel = document.querySelector('.tabpanel.active');
-  if(!activePanel) return;
-  const id = activePanel.id || '';
-  const key = id.replace(/^tab-/, '');
-  if (STAGE_ORDER.includes(key)) renderPhase(key);
-}
-
-// ===== Standings =====
 function matchPointsForParticipant(p){
   let sum = 0; for(const m of STATE.matches){
     const pred = p?.predictions?.find(pp=>pp.matchId===m.matchId) || {};
@@ -233,6 +221,76 @@ function computeStandings(){
   });
   rows.sort((a,b)=> b.total - a.total || b.matchPts - a.matchPts || a.name.localeCompare(b.name));
   return rows;
+}
+
+function groupStageTables(){
+  const groupMatches = STATE.matches.slice(0, Math.min(GROUP_STAGE_MATCHES, STATE.matches.length));
+  const groups = [];
+  for(let i=0; i<groupMatches.length; i+=4){
+    const letter = GROUP_LETTERS[groups.length] || `G${groups.length+1}`;
+    const set = groupMatches.slice(i, i+4);
+    if(!set.length) continue;
+    const teams = new Map();
+    const ensure = (name)=>{
+      if(!teams.has(name)) teams.set(name, {team:name, group:letter, pj:0,g:0,e:0,p:0,gf:0,gc:0,dg:0,pts:0});
+      return teams.get(name);
+    };
+    for(const m of set){ ensure(m.homeTeam); ensure(m.awayTeam); }
+    for(const m of set){
+      const r = STATE.resultsById.get(m.matchId);
+      if(!r) continue;
+      const h = ensure(m.homeTeam), a = ensure(m.awayTeam);
+      h.pj++; a.pj++; h.gf += r.homeGoals; h.gc += r.awayGoals; a.gf += r.awayGoals; a.gc += r.homeGoals;
+      if(r.homeGoals > r.awayGoals){ h.g++; a.p++; h.pts += 3; }
+      else if(r.homeGoals < r.awayGoals){ a.g++; h.p++; a.pts += 3; }
+      else { h.e++; a.e++; h.pts++; a.pts++; }
+    }
+    const rows = [...teams.values()].map(t=>({ ...t, dg:t.gf-t.gc }))
+      .sort((a,b)=> b.pts-a.pts || b.dg-a.dg || b.gf-a.gf || a.team.localeCompare(b.team));
+    groups.push({letter, rows});
+  }
+  return groups;
+}
+
+function renderWorldCupTables(){
+  const groupsEl = document.getElementById('world-cup-groups');
+  const overallBody = document.querySelector('#world-cup-overall tbody');
+  if(!groupsEl || !overallBody) return;
+
+  const groups = groupStageTables();
+  groupsEl.innerHTML = '';
+  const allRows = [];
+
+  for(const g of groups){
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.innerHTML = `
+      <h3>Grupo ${g.letter}</h3>
+      <div class="table-wrap">
+        <table class="table group-table">
+          <thead>
+            <tr><th>#</th><th>Equipo</th><th class="center">PJ</th><th class="center">G</th><th class="center">E</th><th class="center">P</th><th class="center">GF</th><th class="center">GC</th><th class="center">DG</th><th class="center">Pts</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>`;
+    const tb = card.querySelector('tbody');
+    g.rows.forEach((r, idx)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${idx+1}</td><td>${r.team}</td><td class="center">${r.pj}</td><td class="center">${r.g}</td><td class="center">${r.e}</td><td class="center">${r.p}</td><td class="center">${r.gf}</td><td class="center">${r.gc}</td><td class="center">${r.dg}</td><td class="center"><strong>${r.pts}</strong></td>`;
+      tb.appendChild(tr);
+      allRows.push(r);
+    });
+    groupsEl.appendChild(card);
+  }
+
+  allRows.sort((a,b)=> b.pts-a.pts || b.dg-a.dg || b.gf-a.gf || a.team.localeCompare(b.team));
+  overallBody.innerHTML = '';
+  allRows.forEach((r, idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${idx+1}</td><td>${r.team}</td><td class="center">${r.group}</td><td class="center">${r.pj}</td><td class="center">${r.g}</td><td class="center">${r.e}</td><td class="center">${r.p}</td><td class="center">${r.gf}</td><td class="center">${r.gc}</td><td class="center">${r.dg}</td><td class="center"><strong>${r.pts}</strong></td>`;
+    overallBody.appendChild(tr);
+  });
 }
 
 function renderStandings(){
@@ -255,40 +313,29 @@ function renderStandings(){
   });
 }
 
-// ===== UI: select + búsqueda + tabs =====
 function populateSelect(){
   const sel = document.getElementById('sel');
   if(!sel) return;
   // limpia y agrega opción inicial
   sel.innerHTML = '<option value="">— Selecciona —</option>';
-  for(const p of STATE.participants){
+@@ -174,41 +304,43 @@ function populateSelect(){
     const opt = document.createElement('option');
     opt.value = p.email; opt.textContent = p.name; sel.appendChild(opt);
   }
   sel.addEventListener('change', ()=>{
     const v = sel.value; renderParticipantByEmail(v);
-    renderActivePhaseIfAny(); // ← refrescar fase activa
   });
 }
 
 function wire(){
   const q = document.getElementById('q');
   const btn = document.getElementById('btnSearch');
-  if(btn) btn.addEventListener('click', ()=>{
-    renderParticipant(q.value);
-    renderActivePhaseIfAny(); // ← refrescar fase activa
-  });
-  if(q) q.addEventListener('keypress', (e)=>{
-    if(e.key==='Enter'){
-      renderParticipant(q.value);
-      renderActivePhaseIfAny(); // ← refrescar fase activa
-    }
-  });
+  if(btn) btn.addEventListener('click', ()=>renderParticipant(q.value));
+  if(q) q.addEventListener('keypress', (e)=>{ if(e.key==='Enter'){ renderParticipant(q.value); }});
 
-  // Tabs (incluye nuevas fases)
+  // Tabs
   document.querySelectorAll('.tab').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      // activar/desactivar pestañas (mismo patrón que tenías)
       document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       const target = btn.getAttribute('data-target');
@@ -296,33 +343,18 @@ function wire(){
         if('#'+p.id === target){ p.classList.add('active'); p.removeAttribute('aria-hidden'); }
         else { p.classList.remove('active'); p.setAttribute('aria-hidden', 'true'); }
       });
-
-      // render específico por destino
       if(target === '#tab-standings') renderStandings();
-
-      // Fases
-      const PHASE_TARGETS = {
-        '#tab-roundOf32': 'roundOf32',
-        '#tab-roundOf16': 'roundOf16',
-        '#tab-quarterfinals': 'quarterfinals',
-        '#tab-semifinals': 'semifinals',
-        '#tab-thirdPlace': 'thirdPlace',
-        '#tab-final': 'final'
-      };
-      if (Object.prototype.hasOwnProperty.call(PHASE_TARGETS, target)) {
-        renderPhase(PHASE_TARGETS[target]);
-      }
-      // Para #tab-matches no hacemos nada extra (ya lo maneja renderParticipant*)
+      if(target === '#tab-world-cup') renderWorldCupTables();
     });
   });
 }
 
-// ===== Inicio =====
 (async function(){
   try{
     await loadAll();
     populateSelect();
     wire();
+    renderWorldCupTables();
     // Importante: NO render por defecto de ningún participante
     // Queda todo en '—' hasta que el usuario seleccione o busque
   }catch(err){
