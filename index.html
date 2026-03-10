@@ -1,1 +1,199 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Polla Mundialista 2026 · Aurora</title><link rel="stylesheet" href="styles.css"/></head><body><header class="a-header"><div class="a-shell"><div class="a-brand"><h1>Polla Mundialista <span>2026</span></h1><p class="a-sub">Panel de predicciones, resultados y posiciones</p></div><div class="a-controls a-controls--fixed"><div class="a-field"><label for="sel">Participante</label><select id="sel"></select></div><div class="a-searchbar"><input id="q" type="search" placeholder="Nombre o correo…" /><button id="btnSearch" class="a-btn">Buscar</button></div></div><div class="a-cards" id="summary"><div class="a-card"><div class="a-k">Participante</div><div class="a-v" id="s_name">—</div></div><div class="a-card"><div class="a-k">Puntos (partidos)</div><div class="a-v" id="s_match_pts">0</div></div><div class="a-card"><div class="a-k">Bonus</div><div class="a-v" id="s_bonus">0</div></div><div class="a-card"><div class="a-k">Total</div><div class="a-v" id="s_total">0</div></div></div></div></header><nav class="a-tabs a-tabs--align" role="tablist" aria-label="Secciones"><button class="a-tab active" data-target="#tab-matches">Partidos</button><button class="a-tab" data-target="#tab-r32" data-stage="R32">Dieciseisavos</button><button class="a-tab" data-target="#tab-r16" data-stage="R16">Octavos</button><button class="a-tab" data-target="#tab-qf" data-stage="QF">Cuartos</button><button class="a-tab" data-target="#tab-sf" data-stage="SF">Semifinal</button><button class="a-tab" data-target="#tab-3p" data-stage="3P">3.º y 4.º</button><button class="a-tab" data-target="#tab-f" data-stage="F">Final</button><button class="a-tab" data-target="#tab-standings">Posiciones</button><button class="a-tab" data-target="#tab-points">Puntos</button><button class="a-tab" data-target="#tab-groups">Así va el mundial</button></nav><main class="a-shell"><section id="tab-matches" class="a-panel active" role="tabpanel"><h2 class="a-h2">Todos los partidos</h2><div id="matches" class="a-matches"></div></section><section id="tab-r32" class="a-panel" role="tabpanel"><h2 class="a-h2">Dieciseisavos de final</h2><div id="matches_r32" class="a-matches"></div></section><section id="tab-r16" class="a-panel" role="tabpanel"><h2 class="a-h2">Octavos de final</h2><div id="matches_r16" class="a-matches"></div></section><section id="tab-qf" class="a-panel" role="tabpanel"><h2 class="a-h2">Cuartos de final</h2><div id="matches_qf" class="a-matches"></div></section><section id="tab-sf" class="a-panel" role="tabpanel"><h2 class="a-h2">Semifinal</h2><div id="matches_sf" class="a-matches"></div></section><section id="tab-3p" class="a-panel" role="tabpanel"><h2 class="a-h2">3.º y 4.º puesto</h2><div id="matches_3p" class="a-matches"></div></section><section id="tab-f" class="a-panel" role="tabpanel"><h2 class="a-h2">Final</h2><div id="matches_f" class="a-matches"></div></section><section id="tab-standings" class="a-panel" role="tabpanel"><h2 class="a-h2">Tabla de posiciones</h2><div class="a-tablewrap"><table class="a-table" id="standings"><thead><tr><th>#</th><th>Participante</th><th class="c">Partidos</th><th class="c">Bonus</th><th class="c">Total</th></tr></thead><tbody></tbody></table></div></section><section id="tab-points" class="a-panel" role="tabpanel"><h2 class="a-h2">¿Cómo se puntúa?</h2><div class="a-infogrid"></div></section><section id="tab-groups" class="a-panel" role="tabpanel"><h2 class="a-h2">Así va el mundial</h2><div id="groups_grid" class="a-groups"></div></section></main><footer class="a-footer"><div class="a-shell"><span>UI Aurora · Estático · Mundial 2026</span></div></footer><script src="app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Polla Mundialista 2026</title>
+  https://fonts.googleapis.com
+  https://fonts.gstatic.com
+  https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Inter:wght@400;600&display=swap
+  styles.css
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__inner">
+      <div class="brand">
+        <svg class="brand__ball" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <defs>
+            <radialGradient id="g" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="100%" stop-color="#e5e7eb"/>
+            </radialGradient>
+          </defs>
+          <circle cx="32" cy="32" r="30" fill="url(#g)" stroke="#111827" stroke-width="2"/>
+          <path d="M32 16l7 5-2 8-10 0-2-8 7-5z" fill="#111827"/>
+          <path d="M20 27l-6 4 2 8 8 3 5-6-2-7zM44 27l6 4-2 8-8 3-5-6 2-7zM26 42l-2 7 8 5 8-5-2-7H26z" fill="#111827"/>
+        </svg>
+        <h1>Polla Mundialista <span>2026</span></h1>
+      </div>
+      <p class="subtitle">Resultados, predicciones y puntos — estático para GitHub Pages</p>
+
+      <div class="finder">
+        <div class="finder__col">
+          <label for="sel">Selecciona un participante</label>
+          <select id="sel" class="select">
+            <option value="">— Selecciona —</option>
+          </select>
+        </div>
+        <div class="finder__col">
+          <label for="q">…o búscalo por nombre/correo</label>
+          <div class="search">
+            <input id="q" type="search" placeholder="Escribe un nombre o correo…" autocomplete="off" />
+            <button id="btnSearch" class="btn">Buscar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary" id="summary">
+        <div class="card">
+          <div class="card__title">Participante</div>
+          <div class="card__value" id="s_name">—</div>
+        </div>
+        <div class="card">
+          <div class="card__title">Puntos (partidos)</div>
+          <div class="card__value" id="s_match_pts">0</div>
+        </div>
+        <div class="card">
+          <div class="card__title">Bonus</div>
+          <div class="card__value" id="s_bonus">0</div>
+        </div>
+        <div class="card">
+          <div class="card__title">Total</div>
+          <div class="card__value" id="s_total">0</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button class="tab active" role="tab" aria-selected="true" data-target="#tab-matches">Partidos</button>
+
+      <!-- NUEVAS PESTAÑAS (fases) -->
+      <button class="tab" role="tab" aria-selected="false" data-target="#tab-roundOf32">Dieciseisavos</button>
+      <button class="tab" role="tab" aria-selected="false" data-target="#tab-roundOf16">Octavos</button>
+      <button class="tab" role="tab" aria-selected="false" data-target="#tab-quarterfinals">Cuartos</button>
+      <button class="tab" role="tab" aria-selected="false" data-target="#tab-semifinals">Semifinal</button>
+      <button class="tab" role="tab" aria-selected="false" data-target="#tab-thirdPlace">3.º y 4.º</button>
+      <button class="tab" role="tab" aria-selected="false" data-target="#tab-final">Final</button>
+
+      <button class="tab" role="tab" aria-selected="false" data-target="#tab-standings">Posiciones</button>
+      <button class="tab" role="tab" aria-selected="false" data-target="#tab-points">Puntos</button>
+    </nav>
+
+    <!-- Partidos (todos) -->
+    <section id="tab-matches" class="tabpanel active" role="tabpanel">
+      <h2>Partidos</h2>
+      <p class="muted">El tablero está listo para <strong>todos los partidos</strong> detectados desde el formulario. Los primeros 20 tienen marcadores finales ficticios de ejemplo.</p>
+      <div id="matches" class="matches"></div>
+
+      <h2 style="margin-top:28px">Bonus de clasificados</h2>
+      <details open>
+        <summary>Instrucciones</summary>
+        <ul>
+          <li>Completa <code>data/bonus_picks.json</code> con los equipos que cada participante eligió al inicio.</li>
+          <li>Actualiza <code>data/bonus_actual.json</code> con los clasificados reales por fase.</li>
+          <li>El sistema asigna: 2 pts (32), 5 pts (Octavos), 10 pts (Cuartos), 15 pts (Semifinal), 17 pts (3.º y 4.º), 20 pts (Final).</li>
+        </ul>
+      </details>
+      <div id="bonus" class="bonus"></div>
+    </section>
+
+    <!-- NUEVOS PANELES (una lista .matches por fase) -->
+    <section id="tab-roundOf32" class="tabpanel" role="tabpanel" aria-hidden="true">
+      <h2>Dieciseisavos</h2>
+      <div class="matches" id="matches-roundOf32"></div>
+    </section>
+
+    <section id="tab-roundOf16" class="tabpanel" role="tabpanel" aria-hidden="true">
+      <h2>Octavos</h2>
+      <div class="matches" id="matches-roundOf16"></div>
+    </section>
+
+    <section id="tab-quarterfinals" class="tabpanel" role="tabpanel" aria-hidden="true">
+      <h2>Cuartos</h2>
+      <div class="matches" id="matches-quarterfinals"></div>
+    </section>
+
+    <section id="tab-semifinals" class="tabpanel" role="tabpanel" aria-hidden="true">
+      <h2>Semifinal</h2>
+      <div class="matches" id="matches-semifinals"></div>
+    </section>
+
+    <section id="tab-thirdPlace" class="tabpanel" role="tabpanel" aria-hidden="true">
+      <h2>3.º y 4.º</h2>
+      <div class="matches" id="matches-thirdPlace"></div>
+    </section>
+
+    <section id="tab-final" class="tabpanel" role="tabpanel" aria-hidden="true">
+      <h2>Final</h2>
+      <div class="matches" id="matches-final"></div>
+    </section>
+
+    <!-- Posiciones -->
+    <section id="tab-standings" class="tabpanel" role="tabpanel" aria-hidden="true">
+      <h2>Tabla de posiciones</h2>
+      <p class="muted">Ordenado por <strong>Total</strong> = puntos por partidos + bonus.</p>
+      <div class="table-wrap">
+        <table class="table" id="standings" aria-describedby="Tabla de posiciones">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Participante</th>
+              <th scope="col" class="center">Partidos</th>
+              <th scope="col" class="center">Bonus</th>
+              <th scope="col" class="center">Total</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Puntos -->
+    <section id="tab-points" class="tabpanel" role="tabpanel" aria-hidden="true">
+      <h2>¿Cómo se puntúa?</h2>
+      <div class="infogrid">
+        <div class="info">
+          <div class="info__badge info__badge--big">5</div>
+          <div class="info__text"><strong>Marcador exacto</strong><br/>Acierta el resultado y los goles de ambos equipos.</div>
+        </div>
+        <div class="info">
+          <div class="info__badge">3</div>
+          <div class="info__text">Ganador correcto <em>y</em> sus goles; o empate correcto con marcador distinto.</div>
+        </div>
+        <div class="info">
+          <div class="info__badge">2</div>
+          <div class="info__text">Solo el <strong>resultado</strong> (ganador o empate), con otro marcador.</div>
+        </div>
+        <div class="info">
+          <div class="info__badge">1</div>
+          <div class="info__text">Acierta los goles de <strong>un</strong> equipo, sin importar el resultado.</div>
+        </div>
+        <div class="info">
+          <div class="info__badge">0</div>
+          <div class="info__text">No acierta.</div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:24px">Puntos extra por clasificados (picks iniciales)</h3>
+      <div class="bonusgrid">
+        <div class="bcard"><div class="bpts">2</div><div class="btxt">Dieciseisavos (32)</div></div>
+        <div class="bcard"><div class="bpts">5</div><div class="btxt">Octavos (16)</div></div>
+        <div class="bcard"><div class="bpts">10</div><div class="btxt">Cuartos (8)</div></div>
+        <div class="bcard"><div class="bpts">15</div><div class="btxt">Semifinal (4)</div></div>
+        <div class="bcard"><div class="bpts">17</div><div class="btxt">3.º y 4.º (2)</div></div>
+        <div class="bcard"><div class="bpts">20</div><div class="btxt">Final (2)</div></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <span>Hecho para GitHub Pages · Estático · Mundial 2026</span>
+    </div>
+  </footer>
+
+  app.js</script>
+</body>
+</html>
